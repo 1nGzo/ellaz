@@ -7,6 +7,7 @@ import { unlockAudioOnFirstGesture } from "./portal/unlockAudio";
 import { redirectLegacyHash } from "./portal/legacyHash";
 import { themePort } from "@ui/theme";
 import { registerSW } from "virtual:pwa-register";
+import { preventPageZoom } from "./portal/pageZoom";
 import { applyWhenSafe } from "./portal/swUpdate";
 
 // One bundle, two shapes of page.
@@ -21,6 +22,8 @@ import { applyWhenSafe } from "./portal/swUpdate";
 // Which one is decided by reading the DOCUMENT, never by parsing the URL: this
 // site ships under two bases ("/" and "/ellaz/"), and a runtime that re-derives
 // the base gets it wrong on one host and renders prose that never mounts a game.
+
+preventPageZoom();
 
 // The update still applies by itself, with nothing to tap. `applyWhenSafe`
 // only decides WHEN - never while a game is on screen. See swUpdate.ts for the

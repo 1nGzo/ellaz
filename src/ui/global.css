@@ -16,6 +16,13 @@
    See .claude/rules/a-font-behind-an-import-is-invisible-to-every-preload.md */
 @import "./fonts.css";
 
+/* Allow single-finger scrolling, but no browser pinch or double-tap zoom.
+   Zero specificity preserves game-owned touch-action:none drag surfaces.
+   Apply below nested scrollers too: touch-action stops at the scroll ancestor. */
+:where(html, body, body *) {
+  touch-action: pan-x pan-y;
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

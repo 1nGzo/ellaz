@@ -85,3 +85,55 @@ picture-picture pairs. Browser speech-call checks do not prove audible OS output
   payload, emitted pages and catalogue slope. Isolated slope arms: 56,670 B
   (43 games) vs 56,399 B (35 games), 33.9 B gzip/game, below the 40 B target
   and 45 B limit. These isolated builds are distinct from the delivered first visit.
+
+## Round 4 global page-zoom follow-up
+
+The stage implementation above was already committed as `25d9c78` when this
+follow-up started. This change adds the shared page guard, without modifying
+standard Memory or moving stage metadata out of its lazy chunk.
+
+`src/main.tsx` installs `preventPageZoom()` before either app-shell or content-page
+mount. Global zero-specificity `touch-action: pan-x pan-y` permits single-finger
+scrolling and excludes browser pinch/double-tap zoom, including nested scrollers.
+Existing game `touch-action: none` declarations retain precedence for dragging.
+Non-passive capture listeners cancel Safari `gesturestart` / `gesturechange` and
+multi-touch `touchmove`; single-touch movement is untouched. No propagation is
+stopped, and no pointer, click, touchstart, touchend or keyboard handler is added,
+so the existing first-gesture audio/speech unlock still receives its input.
+Viewport metadata is intentionally not the enforcement mechanism: Safari may
+ignore zoom restrictions there. The old index comment promising page zoom was
+removed to match the requested child-oriented interaction policy.
+
+A future game can mark its own gesture surface `data-game-zoom`, set
+`touch-action: none`, and handle/prevent its local pinch gesture itself. The JS
+guard exempts descendants of that surface; removing it removes the exemption.
+This does not enable browser page zoom or grant a persistent global opt-out.
+
+References: [Apple Safari event handling](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html)
+and [MDN touch-action](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action).
+Page resize accessibility is deliberately limited by this requested policy;
+browser/OS accessibility magnification and Safari chrome gestures are outside
+page control. Real iPad Safari and installed iPad PWA testing remain separate
+from Linux Chrome touch emulation and synthetic Safari-event assertions.
+
+Follow-up validation (2026-09-13, local toolchain):
+
+- `npm test`: 195 files / 4,763 tests passed. The new guard tests cover
+  multi-touch cancellation, event propagation, untouched single-finger/input
+  events, explicit local exemption and shared entry/CSS coverage.
+- `scripts/repro/repro-page-zoom.mjs`: Chrome at 820×1180 with mobile/touch
+  enabled passed trusted pinch and double-tap scale checks, nested scrolling,
+  pointer capture dragging and game tap on both home and Memory pages.
+  Safari gesture cancellation is checked with synthetic events only.
+- `scripts/repro/repro-preschool-memory.mjs`: all four stage grids, unique
+  pairs, finale unlock/reload, Mandarin repeat requests, isolated standard
+  scores, mode routing and standard en/he/es entry passed; no page errors.
+  Stage 4's 390×844 screenshot was visually inspected.
+- Delivered first visit: **56,625 B gzip / 56,800 B**, **175 B spare**.
+  Stage configuration and all word records remain Memory-lazy. No dependency,
+  audit, economy or other-game changes. No physical iPad Safari/PWA or audible
+  Mandarin output is claimed by these automated checks.
+- `npm run build:check`: passed in full (tier, first-visit precache/preload,
+  payload, emitted pages and slope). Isolated arms measured 56,616 / 56,360 B
+  gzip, giving 32.0 B/game against the 45 B limit and 40 B target. Those arms
+  are independent builds, not the delivered artifact's 56,625 B measurement.
