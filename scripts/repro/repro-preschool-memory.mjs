@@ -32,8 +32,9 @@ assert(links.every(h=>h==='/games/memory/?play=preschool'), JSON.stringify(links
 await page.screenshot({path:'/tmp/ellaz-preschool-home.png',fullPage:false});
 await page.locator('#root a[href="/games/memory/?play=preschool"]').first().click();
 await page.getByRole('button',{name:'再听一次',exact:true}).waitFor();
-const cards=page.locator('#game-frame button').filter({has:page.locator('xpath=self::*[@aria-label="翻牌" or @aria-label="猫" or @aria-label="苹果" or @aria-label="车"]')});
+const cards=page.locator('.ellaz-play-surface > div button');
 assert.equal(await cards.count(),4);
+assert.equal(await page.locator('.gc-level').count(),0);
 // Speech is recorded at the browser API boundary. This proves Mandarin request,
 // not physical sound from the device.
 await page.evaluate(()=>{
@@ -49,40 +50,44 @@ await page.getByRole('button',{name:'再听一次',exact:true}).click();
 const spoken=await page.evaluate(()=>window.__spoken);
 assert(spoken.length>=2 && spoken.every(x=>x.lang==='zh-CN'),JSON.stringify(spoken));
 assert.equal(spoken.at(-1).text,spoken.at(-2).text);
-// Learn the tiny board through actual taps, then match it.
-for(let i=0;i<4;i++) {
- await cards.nth(i).click();
- if(await page.getByRole('button',{name:/再玩一次/}).count())break;
- await page.waitForTimeout(1450);
-}
-// Read IDs from the settled session only to locate pairs after the interaction check.
-await page.waitForTimeout(5100);
-const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('ellaz:memory:preschool:zh-CN:session')??'null'));
-if(saved) {
+// Use actual persisted decks to complete a board, then reload during celebration.
+const progressKey='ellaz:memory:preschool:zh-CN:stage-progress';
+const sessionKey='ellaz:memory:preschool:zh-CN:session';
+for (const [stage, rows, cols, pairs, levels] of [[1,2,2,2,10],[2,2,3,3,15],[3,3,4,6,20],[4,4,4,8,20]]) {
+ await page.evaluate(({progressKey,sessionKey,stage,levels})=>{
+  localStorage.setItem(progressKey,JSON.stringify({version:1,stage,level:levels,completed:false}));
+  localStorage.removeItem(sessionKey);
+ },{progressKey,sessionKey,stage,levels});
+ await page.reload();
+ await cards.first().waitFor();
+ assert.equal(await cards.count(),pairs*2);
+ assert.equal(await cards.first().evaluate(el=>getComputedStyle(el.parentElement).gridTemplateColumns.split(' ').length),cols);
+ await page.screenshot({path:`/tmp/ellaz-preschool-stage-${stage}.png`,fullPage:false});
+ await page.waitForTimeout(5200);
+ const saved=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),sessionKey);
+ const faces=[...new Set(saved.s.state.cards.map(c=>c.face))];
+ assert.equal(faces.length,pairs);
+ for(const face of faces) {
+  const indices=saved.s.state.cards.flatMap((c,i)=>c.face===face?[i]:[]);
+  assert.equal(indices.length,2);
+  for(const i of indices) await cards.nth(i).click();
+ }
+ await page.getByRole('status').filter({hasText:stage===4?'全部完成':'已解锁'}).waitFor();
+ const next=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),progressKey);
+ assert.equal(next.stage,Math.min(4,stage+1));
+ assert.equal(next.level,stage===4?20:1);
+ assert.equal(next.completed,stage===4);
  await page.reload();
  await page.getByRole('button',{name:'再听一次',exact:true}).waitFor();
- for(const face of ['cat','apple']) {
-  const indices=saved.s.state.cards.flatMap((c,i)=>c.face===face?[i]:[]);
-  for(const i of indices) await cards.nth(i).click();
-  await page.waitForTimeout(1450);
- }
+ if(stage===4) await page.getByRole('button',{name:'再玩第 4 阶段',exact:true}).waitFor();
+ else assert.equal(await cards.count(),[2,3,6,8][stage]*2);
+ console.log(`PASS Stage ${stage}: ${rows}x${cols}, ${pairs} unique pairs, unlock and reload`);
 }
-await page.getByRole('button',{name:/再玩一次/}).waitFor();
-assert(await page.getByRole('button',{name:'猫',exact:true}).count()===2);
-assert(await page.getByRole('button',{name:'苹果',exact:true}).count()===2);
 assert.equal(await page.evaluate(()=>localStorage.getItem('ellaz:memory:score:easy')),null);
-assert(await page.evaluate(()=>localStorage.getItem('ellaz:memory:preschool:zh-CN:score:two')));
-await page.screenshot({path:'/tmp/ellaz-preschool-memory-win.png',fullPage:false});
-console.log('PASS preschool home/daily, Chinese 2-pair play, repeat Mandarin API requests, win and isolated score');
-await page.reload();
-await page.getByRole('button',{name:'再听一次',exact:true}).waitFor();
-assert.equal(await cards.count(),4);
-await page.getByRole('button',{name:/2 🐱🍎/}).click();
-assert.equal(await cards.count(),6);
-await page.screenshot({path:'/tmp/ellaz-preschool-memory-three.png',fullPage:false});
+console.log('PASS Mandarin repeat requests and no standard score writes');
 await page.goto('https://ellaz.test/games/snake/?play=preschool');
 await page.waitForURL('https://ellaz.test/?play=preschool');
-console.log('PASS 3 pairs and disallowed direct game redirects home');
+console.log('PASS disallowed direct game redirects home');
 for(const locale of ['en','he','es']) {
  await page.goto(`https://ellaz.test/${locale==='en'?'':locale+'/'}games/memory/?play=standard`);
  await page.locator('#game-frame button[aria-label="card"]').first().waitFor();
