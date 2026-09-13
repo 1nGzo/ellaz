@@ -1,3 +1,4 @@
+import { runtimeLocaleFor } from "@i18n/runtimeLocale";
 import { createRoot, type Root } from "react-dom/client";
 import type { AppLocale, PageLocale } from "@i18n/locales";
 import { DEFAULT_LOCALE, DIR, loadDict, pageLocaleFor } from "@i18n/index";
@@ -559,10 +560,11 @@ export function bootContentPage(ctx: PageContext): void {
 
   const embed = ctx.kind === "embed";
   // The language the game and its chrome speak. On our own pages that is the
-  // page's language; inside a stranger's frame it is whatever `?lang=` asked
+  // page's language, except app-only preferences on fallback documents;
+  // inside a stranger's frame it is whatever `?lang=` asked
   // for, validated, because the embed document is emitted in one language and
   // answers in eleven.
-  const appLocale: AppLocale = embed ? requestedLocale(location.search) : locale;
+  const appLocale: AppLocale = embed ? requestedLocale(location.search) : runtimeLocaleFor(locale);
   if (embed) {
     document.documentElement.lang = appLocale;
     document.documentElement.dir = DIR[appLocale];
@@ -622,6 +624,8 @@ export function bootContentPage(ctx: PageContext): void {
    */
   const start = async () => {
     await loadDict(appLocale);
+    frame.lang = appLocale;
+    frame.dir = DIR[appLocale];
     poster?.setAttribute("hidden", "");
 
     // The game and the room get the whole first screen, which means a fixed
@@ -635,9 +639,9 @@ export function bootContentPage(ctx: PageContext): void {
     const root = createRoot(frame);
     root.render(
       ctx.kind === "world" ? (
-        <World locale={locale} />
+        <World locale={appLocale} />
       ) : ctx.kind === "boards" ? (
-        <Boards locale={locale} />
+        <Boards locale={appLocale} />
       ) : embed ? (
         // The embed variant: this frame has no emitted header, so the host's
         // own bar is the only chrome there is - and it draws MUTE alone. No
@@ -653,7 +657,7 @@ export function bootContentPage(ctx: PageContext): void {
       ) : (
         <GameHost
           gameId={ctx.gameId ?? ""}
-          locale={locale}
+          locale={appLocale}
           onExit={exitTo(locale)}
           variant="page"
         />

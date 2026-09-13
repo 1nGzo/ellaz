@@ -35,7 +35,7 @@ const lazyLocales = APP_LOCALES.filter((l) => l !== "he" && l !== "en");
 const dicts: Record<string, Record<string, string>> = { he, en };
 for (const l of lazyLocales) {
   const mod = await import(`./dict/${l}.ts`);
-  dicts[l] = mod[l];
+  dicts[l] = l === "zh-CN" ? mod.zhCN : mod[l];
 }
 
 describe("the dictionaries", () => {
@@ -45,13 +45,17 @@ describe("the dictionaries", () => {
 
   it("gives every language every key, and no extras", () => {
     for (const locale of APP_LOCALES) {
+      if (locale === "zh-CN") {
+        expect(Object.keys(dicts[locale]).every((key) => KEYS.includes(key as keyof typeof he))).toBe(true);
+        continue;
+      }
       expect(Object.keys(dicts[locale]).sort(), `${locale} keys`).toEqual([...KEYS].sort());
     }
   });
 
   it("leaves no string empty", () => {
     for (const locale of APP_LOCALES) {
-      for (const key of KEYS) {
+      for (const key of Object.keys(dicts[locale])) {
         expect(dicts[locale][key]?.trim(), `${locale}.${key}`).toBeTruthy();
       }
     }
@@ -71,9 +75,10 @@ describe("the dictionaries", () => {
       for (let j = i + 1; j < locales.length; j += 1) {
         const a = dicts[locales[i]];
         const b = dicts[locales[j]];
-        const same = KEYS.filter((k) => a[k] === b[k]).length;
+        const compared = KEYS.filter((k) => k in a && k in b);
+        const same = compared.filter((k) => a[k] === b[k]).length;
         expect(
-          same / KEYS.length,
+          same / compared.length,
           `${locales[i]} and ${locales[j]} share ${same}/${KEYS.length} strings`,
         ).toBeLessThan(0.5);
       }

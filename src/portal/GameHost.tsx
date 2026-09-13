@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
-import { backArrow, makeT, pageLocaleFor, shippedLocaleFor, textFor } from "@i18n/index";
-import type { AppLocale } from "@i18n/locales";
+import { backArrow, makeT, pageLocaleFor, textFor } from "@i18n/index";
+import { contentLocaleFor, type AppLocale } from "@i18n/locales";
 import { createHostControls, audioPort, wallet } from "@sdk/index";
 import { Button, IconButton } from "@ui/components";
 import { hasRestart, runRestart } from "@ui/gameTools";
@@ -113,10 +113,7 @@ export function GameHost({
       return;
     }
 
-    // Narrowed here, at the boundary: the interface may be speaking one of
-    // eleven languages and a game's own label tables are written in three. A
-    // Portuguese player gets English game strings rather than `undefined`.
-    const host = createHostControls(gameId, shippedLocaleFor(locale), el);
+    const host = createHostControls(gameId, locale, el);
     (host.context as unknown as { __setRequestExit: (f: () => void) => void }).__setRequestExit(
       onExit,
     );
@@ -345,6 +342,8 @@ export function GameHost({
 
       <div
         ref={mountRef}
+        data-runtime-locale={locale}
+        data-content-locale={contentLocaleFor(locale)}
         // `ellaz-game-stage` is what makes a game unselectable, and it belongs
         // HERE rather than on each board: this is the one element every game
         // mounts inside, so the level toggle, the stat row and the footer are

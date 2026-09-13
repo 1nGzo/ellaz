@@ -1,4 +1,4 @@
-import type { Locale } from "@i18n/index";
+import { shippedLocaleFor, contentLocaleFor, type AppLocale } from "@i18n/locales";
 import { makeT, DIR } from "@i18n/index";
 import type { GameContext } from "./types";
 import { createSaveStore } from "./storage";
@@ -31,7 +31,8 @@ export interface HostControls {
   getExitHandler(): (() => void) | undefined;
 }
 
-export function createHostControls(gameId: string, locale: Locale, mount: HTMLElement): HostControls {
+export function createHostControls(gameId: string, runtimeLocale: AppLocale, mount: HTMLElement): HostControls {
+  const locale = shippedLocaleFor(runtimeLocale);
   const pauseCbs = new Set<() => void>();
   const resumeCbs = new Set<() => void>();
   const resizeCbs = new Set<(w: number, h: number) => void>();
@@ -46,8 +47,10 @@ export function createHostControls(gameId: string, locale: Locale, mount: HTMLEl
   const context: GameContext = {
     mount,
     locale,
+    runtimeLocale,
+    contentLocale: contentLocaleFor(runtimeLocale),
     dir: DIR[locale],
-    t: makeT(locale),
+    t: makeT(contentLocaleFor(runtimeLocale)),
     storage,
     analytics: createAnalyticsPort(gameId),
     audio: audioPort,

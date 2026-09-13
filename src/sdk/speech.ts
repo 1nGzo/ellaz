@@ -35,7 +35,7 @@
  * 5. Nothing here throws or rejects. Ever. Speech failing must not be a bug
  *    report — it must be silence.
  */
-import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE, type Locale } from "@i18n/index";
+import { DEFAULT_LOCALE as APP_DEFAULT_LOCALE, type ContentLocale as Locale } from "@i18n/locales";
 import type { SpeakOptions, SpeechPort } from "./types";
 import { audioPort } from "./audio";
 import { analytics } from "./analytics";
@@ -76,6 +76,7 @@ const subtag =
  * region so its chain is short; English needs US → GB → anything.
  */
 const CHAINS: Record<Locale, LangMatch[]> = {
+  "zh-CN": [exact("zh-cn"), exact("zh-hans-cn"), exact("zh-hans"), exact("cmn-cn"), exact("cmn-hans-cn"), exact("zh")],
   he: [exact("he-il"), subtag("he")],
   en: [exact("en-us"), exact("en-gb"), subtag("en")],
   // Spanish has many regions and no single right answer, so the chain does

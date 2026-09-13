@@ -263,3 +263,9 @@
   --spark-colors: #ff4d8d, #12b5ad, #ffc730, #ef4a3f, #3cb46a;
   --confetti-colors: #ff4d8d, #ff8fb3, #12b5ad, #ffc730, #ef4a3f, #3cb46a, #ff6fa8, #4c9be8;
 }
+
+/* Local CJK fonts only: no additional font downloads. */
+:lang(zh-CN) {
+  --font: system-ui, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-display: var(--font);
+}

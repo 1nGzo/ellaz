@@ -143,7 +143,7 @@ const STATIC: Partial<Record<AppLocale, Dictionary>> = { he, en };
 export const STATIC_LOCALES = Object.keys(STATIC) as readonly AppLocale[];
 
 /** Loaded lazily and kept. A language is fetched once per session, not per render. */
-const loaded = new Map<AppLocale, Dictionary>(
+const loaded = new Map<AppLocale, Partial<Dictionary>>(
   Object.entries(STATIC) as [AppLocale, Dictionary][],
 );
 
@@ -157,7 +157,8 @@ const loaded = new Map<AppLocale, Dictionary>(
  * `dict-chunks.test.ts` pins that this map covers exactly the app locales that
  * are not static.
  */
-const LAZY: Partial<Record<AppLocale, () => Promise<{ default: Dictionary }>>> = {
+const LAZY: Partial<Record<AppLocale, () => Promise<{ default: Partial<Dictionary> }>>> = {
+  "zh-CN": () => import("./dict/zh-CN").then((m) => ({ default: m.zhCN })),
   es: () => import("./dict/es").then((m) => ({ default: m.es })),
   pt: () => import("./dict/pt").then((m) => ({ default: m.pt })),
   fr: () => import("./dict/fr").then((m) => ({ default: m.fr })),

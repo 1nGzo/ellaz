@@ -69,6 +69,7 @@ export const APP_LOCALES = [
   "ru",
   "tr",
   "id",
+  "zh-CN",
 ] as const;
 
 export type AppLocale = (typeof APP_LOCALES)[number];
@@ -206,9 +207,10 @@ export function dirOf(locale: string): "rtl" | "ltr" {
  * Turkish and Indonesian are `latin` despite their diacritics - the check is
  * about which BLOCK the letters come from, and `ı`, `ş`, `ğ` are all Latin.
  */
-export type Script = "hebrew" | "arabic" | "cyrillic" | "latin";
+export type Script = "hebrew" | "arabic" | "cyrillic" | "latin" | "han";
 
 export const SCRIPT: Record<AppLocale, Script> = {
+  "zh-CN": "han",
   he: "hebrew",
   ar: "arabic",
   ru: "cyrillic",
@@ -232,6 +234,7 @@ export const SCRIPT: Record<AppLocale, Script> = {
  * Spanish has no single dominant market and the neutral form is the honest one.
  */
 export const OG_LOCALE: Record<AppLocale, string> = {
+  "zh-CN": "zh_CN",
   he: "he_IL",
   en: "en_US",
   es: "es_ES",
@@ -258,6 +261,7 @@ export const OG_LOCALE: Record<AppLocale, string> = {
  * children's game platform has no business making.
  */
 export const AUTONYM: Record<AppLocale, string> = {
+  "zh-CN": "简体中文",
   he: "עברית",
   en: "English",
   es: "Español",
@@ -279,6 +283,7 @@ export const AUTONYM: Record<AppLocale, string> = {
  * for them may be looking for the word "Arabic".
  */
 export const ENGLISH_NAME: Record<AppLocale, string> = {
+  "zh-CN": "Chinese (Simplified)",
   he: "Hebrew",
   en: "English",
   es: "Spanish",
@@ -350,4 +355,10 @@ export function isPageLocale(value: unknown): value is PageLocale {
  */
 export function localePrefix(locale: PageLocale): string {
   return locale === CANONICAL_LOCALE ? "" : `/${locale}`;
+}
+
+/** Content selection for new games; legacy authored records stay three-language. */
+export type ContentLocale = ShippedLocale | "zh-CN";
+export function contentLocaleFor(locale: AppLocale): ContentLocale {
+  return locale === "zh-CN" ? locale : shippedLocaleFor(locale);
 }

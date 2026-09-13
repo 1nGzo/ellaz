@@ -1,3 +1,4 @@
+import type { AppLocale, ContentLocale } from "@i18n/locales";
 // Ellaz Game SDK — the single contract every game implements.
 // Framework-neutral on purpose: a game receives a mount element and plain
 // services, so DOM (React) and canvas (Phaser) games share one interface, and
@@ -97,7 +98,7 @@ export interface SpeakOptions {
    * of that value is a second thing to remember to change. It said `"he"` and
    * went stale within hours of the root moving to English on 2026-08-14.
    */
-  locale?: Locale;
+  locale?: ContentLocale;
   /** Default 0.85 — measurably clearer for a 5-year-old than the 1.0 default. */
   rate?: number;
   /** Default 1.05. */
@@ -112,7 +113,7 @@ export interface SpeakOptions {
  */
 export interface SpeechPort {
   /** Is there a usable voice for this locale RIGHT NOW? See `onAvailabilityChange`. */
-  available(locale: Locale): boolean;
+  available(locale: ContentLocale): boolean;
   /** Resolves when the utterance ends, or immediately when unavailable. NEVER rejects. */
   speak(text: string, opts?: SpeakOptions): Promise<void>;
   cancel(): void;
@@ -222,7 +223,12 @@ export interface ScorePort {
 
 export interface GameContext {
   mount: HTMLElement;
+  /** Compatibility language for existing authored records. */
   locale: Locale;
+  /** Selected Portal language, without narrowing. */
+  runtimeLocale: AppLocale;
+  /** New games select content and speech with this language. */
+  contentLocale: ContentLocale;
   dir: "rtl" | "ltr";
   t(key: string): string;
   storage: SaveStore;

@@ -1,12 +1,12 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import type { AppLocale } from "@i18n/locales";
-import { APP_LOCALES, CANONICAL_LOCALE } from "@i18n/locales";
+import { CANONICAL_LOCALE } from "@i18n/locales";
 import { DEFAULT_LOCALE, DIR, isLoaded, loadDict, makeT } from "@i18n/index";
 import { analytics, startCloudSync } from "@sdk/index";
 import { Home } from "./Home";
 import { armCrashReporting, watchErrors } from "./openReport";
 
-const LOCALE_KEY = "ellaz:locale";
+import { LOCALE_KEY, runtimeLocaleFor } from "@i18n/runtimeLocale";
 
 /**
  * The sound lab, at `#/lab`.
@@ -86,28 +86,6 @@ function useHash(): string {
   return hash;
 }
 
-// Renamed from `initialLocale`, because that name is now the PROP: an emitted
-// shell (`/en/`, `/es/`) passes the page's own language and it wins over the
-// stored one. Two things called `initialLocale` in one file is how the prop
-// silently shadows the function.
-function storedLocale(): AppLocale {
-  try {
-    const saved = localStorage.getItem(LOCALE_KEY);
-    // Validated against the list rather than trusted. A stored locale this
-    // build no longer speaks - a language removed, or a hand-edited value -
-    // must fall back to the default, not render a screen of raw key names.
-    if (saved && (APP_LOCALES as readonly string[]).includes(saved)) return saved as AppLocale;
-  } catch {
-    /* ignore */
-  }
-  // ENGLISH, not Hebrew, since 2026-08-14. This is what a first-time visitor
-  // is answered in, and English is the language the largest number of them can
-  // read - the same argument x-default makes to a crawler. A returning player
-  // who picked a language still gets theirs: the stored value is read first
-  // and only an unusable one reaches this line.
-  return DEFAULT_LOCALE;
-}
-
 // Root shell for `/`, and ONLY for `/`.
 //
 // Games and the room live on their own pages now, each one a real document that
@@ -131,7 +109,7 @@ export function App({ initialLocale }: { initialLocale?: AppLocale } = {}) {
   // English for the app, and writing it here would silently repaint `/` for a
   // Hebrew-speaking player who followed one English link. `pickLocale` still
   // persists, because that IS a choice.
-  const [locale, setLocale] = useState<AppLocale>(() => initialLocale ?? storedLocale());
+  const [locale, setLocale] = useState<AppLocale>(() => runtimeLocaleFor(initialLocale));
   // Bumped when a lazy dictionary arrives, purely to re-render. `loaded` lives
   // in the i18n module rather than in React state because it is shared by every
   // screen and must survive a remount; this is the one line that tells React

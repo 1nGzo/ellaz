@@ -88,3 +88,16 @@ describe("pickVoice — degenerate input", () => {
     expect(pickVoice([broken], "he")).toBeNull();
   });
 });
+
+describe("pickVoice — Simplified Chinese Mandarin", () => {
+  it("prefers mainland Mandarin and breaks equal-language ties locally", () => {
+    const local = v("zh-CN", true);
+    expect(pickVoice([v("zh-TW"), v("zh-CN"), local], "zh-CN")).toBe(local);
+    expect(pickVoice([v("zh-Hans-CN")], "zh-CN")?.lang).toBe("zh-Hans-CN");
+    expect(pickVoice([v("cmn-CN")], "zh-CN")?.lang).toBe("cmn-CN");
+  });
+  it("does not substitute English, Cantonese or a look-alike tag", () => {
+    expect(pickVoice([v("en-US"), v("zh-HK"), v("yue-CN"), v("zho-XX")], "zh-CN")).toBeNull();
+    expect(pickVoice([], "zh-CN")).toBeNull();
+  });
+});

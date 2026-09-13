@@ -542,7 +542,7 @@ export default defineConfig({
           //
           // `he` and `en` are deliberately NOT here - they fall through to the
           // shell rule below, which is where they have always been.
-          const dict = /\/src\/i18n\/dict\/([a-z]{2})\.ts$/.exec(path);
+          const dict = /\/src\/i18n\/dict\/([a-z]{2}(?:-[A-Z]{2})?)\.ts$/.exec(path);
           if (dict && dict[1] !== "he" && dict[1] !== "en") return `locale-${dict[1]}`;
 
           // One chunk per game directory, so 32 games are 32 independently
