@@ -1,3 +1,4 @@
+import siteConfig from "../../site.config.json";
 import type { GameMeta } from "../sdk/types";
 import { gameName } from "./gameName";
 import { ORIGIN } from "../content/site";
@@ -284,7 +285,7 @@ export function llmsTxt(games: ReadonlyArray<GameMeta>): string {
  * submits nothing, so a key file there would claim ownership of a site it does
  * not represent.
  */
-export const INDEXNOW_KEY = "92410e02f1e99deb9f7c751db9e59068";
+export const INDEXNOW_KEY = siteConfig.indexNowKey;
 export function indexNowKeyFile(): string {
   return `${INDEXNOW_KEY}\n`;
 }

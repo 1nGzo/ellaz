@@ -46,6 +46,7 @@ concurrency:
 
 jobs:
   smoke:
+    if: ${{ vars.ENABLE_CLOUD_WORKFLOWS == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

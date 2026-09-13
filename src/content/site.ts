@@ -13,7 +13,8 @@ import type { Locale, PageLocale } from "./types";
  * Build-time only, like everything under `src/content/`.
  */
 
-export const ORIGIN = "https://ellaz.fun";
+import siteConfig from "../../site.config.json";
+export const ORIGIN = new URL(siteConfig.origin).origin;
 
 export interface SiteCopy {
   brand: string;

@@ -57,7 +57,9 @@ const MAX_DESC = 160;
  * gate needs the ID; deriving one from the other is what stops a future tag
  * change from being made in one place and silently loosening the other.
  */
-const GA_ID = "G-E25QBB8420";
+const SITE_CONFIG = JSON.parse(readFileSync(new URL("../site.config.json", import.meta.url), "utf8"));
+const ORIGIN = new URL(SITE_CONFIG.origin).origin;
+const GA_ID = SITE_CONFIG.gaMeasurementId || "G-UNCONFIGURED";
 const GA_SRC = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
 
 const failures = [];
@@ -524,14 +526,14 @@ function checkOgCard(html, where, kind) {
     fail(`${where} has no og:image - every link shared to WhatsApp previews with no picture`);
     return;
   }
-  if (!url.startsWith("https://ellaz.fun/og/")) {
+  if (!url.startsWith(`${ORIGIN}/og/`)) {
     fail(`${where} og:image is "${url}" - must be an absolute ellaz.fun URL, like the canonical`);
     return;
   }
   if (!/<meta name="twitter:card" content="summary_large_image"/.test(html)) {
     fail(`${where} has an og:image but still asks for a small twitter card`);
   }
-  const file = join(DIST, url.replace("https://ellaz.fun/", ""));
+  const file = join(DIST, url.replace(`${ORIGIN}/`, ""));
   if (!existsSync(file)) {
     fail(`${where} points at ${url}, which was never written`);
     return;
@@ -956,7 +958,7 @@ function main() {
       }
       for (const f of hreflangFaults(alts, page.locales, page, L.xDefault)) fail(`${where} ${f}`);
       for (const a of alts) {
-        if (!a.href.startsWith("https://ellaz.fun/")) {
+        if (!a.href.startsWith(`${ORIGIN}/`)) {
           fail(`${where} hreflang=${a.hreflang} is ${a.href} - alternates are absolute, like the canonical`);
         } else if (!primary && a.href.includes(base)) {
           fail(`${where} hreflang=${a.hreflang} carries the base: ${a.href}`);
@@ -1238,11 +1240,11 @@ function main() {
           continue;
         }
         for (const url of images) {
-          if (!String(url).startsWith("https://ellaz.fun/")) {
+          if (!String(url).startsWith(`${ORIGIN}/`)) {
             fail(`${where} game image "${url}" is not an absolute ellaz.fun URL`);
             continue;
           }
-          if (!existsSync(join(DIST, String(url).replace("https://ellaz.fun/", "")))) {
+          if (!existsSync(join(DIST, String(url).replace(`${ORIGIN}/`, "")))) {
             fail(`${where} game image ${url} was never written`);
           }
         }
@@ -1291,7 +1293,7 @@ function main() {
   // which is this blind spot's third appearance in this file.
   seeTitle("index.html", indexHtml, L.canonical);
 
-  const homeCanonical = "https://ellaz.fun/";
+  const homeCanonical = `${ORIGIN}/`;
   const homeAlts = alternatesOf(indexHtml).filter((a) => a.hreflang !== "x-default");
   cluster.set(homeCanonical, new Set(homeAlts.map((a) => a.href)));
   if (!families.has("/")) families.set("/", []);
@@ -1445,8 +1447,8 @@ function main() {
 
   // --- index.html: the app shell, head-enhanced in place --------------------
   const index = indexHtml;
-  if (canonicalOf(index) !== `https://ellaz.fun/`) {
-    fail(`index.html canonical is ${canonicalOf(index)}, expected https://ellaz.fun/`);
+  if (canonicalOf(index) !== `${ORIGIN}/`) {
+    fail(`index.html canonical is ${canonicalOf(index)}, expected ${ORIGIN}/`);
   }
   if (jsonLdBlocks(index).length === 0) {
     fail("index.html carries no JSON-LD — a crawler landing on / finds no game links at all");
@@ -1546,14 +1548,14 @@ function main() {
       fail("sitemap advertises no images - the one file whose job is telling Google which pictures exist names none");
     }
     for (const loc of new Set(imageLocs)) {
-      if (!loc.startsWith("https://ellaz.fun/")) {
+      if (!loc.startsWith(`${ORIGIN}/`)) {
         fail(`sitemap image ${loc} is not an absolute ellaz.fun URL`);
         continue;
       }
       // `art/undefined.svg` is a row that validates, a file that does not
       // exist, and a 404 advertised to every crawler. It is what a route with
       // no id emits if the row is keyed on the kind alone.
-      if (!existsSync(join(DIST, loc.replace("https://ellaz.fun/", "")))) {
+      if (!existsSync(join(DIST, loc.replace(`${ORIGIN}/`, "")))) {
         fail(`sitemap advertises image ${loc}, which was never written`);
       }
     }
@@ -1582,7 +1584,7 @@ function main() {
     // By PATH, not by canonical: an embed page's canonical IS its game page,
     // which is rightly in the sitemap. The frame's own address must not be.
     for (const p of manifest.pages.filter((x) => x.kind === "embed")) {
-      const own = `https://ellaz.fun${p.path}`;
+      const own = `${ORIGIN}${p.path}`;
       if (locs.includes(own)) fail(`sitemap advertises the embed frame ${own} - only the game page belongs there`);
     }
 
@@ -1642,7 +1644,9 @@ function main() {
     // Emitted on the primary host only. Without it every submission is
     // rejected, and the rejection is invisible from here.
     const keyFiles = readdirSync(DIST).filter((f) => /^[0-9a-f]{16,128}\.txt$/.test(f));
-    if (keyFiles.length !== 1) {
+    if (!SITE_CONFIG.indexNowKey) {
+      if (keyFiles.length) fail("unconfigured build must not publish an IndexNow ownership file");
+    } else if (keyFiles.length !== 1 || keyFiles[0] !== `${SITE_CONFIG.indexNowKey}.txt`) {
       fail(`expected exactly one IndexNow key file in dist/, found ${keyFiles.length}`);
     } else {
       const key = keyFiles[0].replace(/\.txt$/, "");
@@ -1651,7 +1655,7 @@ function main() {
       }
     }
 
-    if (!robots.includes("Sitemap: https://ellaz.fun/sitemap.xml")) {
+    if (!robots.includes(`Sitemap: ${ORIGIN}/sitemap.xml`)) {
       fail("robots.txt does not point at the sitemap");
     }
   } else {

@@ -1,3 +1,4 @@
+import siteConfig from "../site.config.json";
 /**
  * The entry for a STANDALONE single-game bundle, hosted by somebody else.
  *
@@ -34,7 +35,7 @@ import { shippedLocaleFor } from "@i18n/locales";
 import type { Locale } from "@i18n/index";
 
 /** Where "back" goes when there is no back. */
-const HOME = "https://ellaz.fun/";
+const HOME = `${new URL(siteConfig.origin).origin}/`;
 
 function boot(): void {
   const mount = document.getElementById("root");

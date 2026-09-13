@@ -1,3 +1,9 @@
+import { vi } from "vitest";
+import { beforeEach as configureCloud } from "vitest";
+configureCloud(() => {
+  vi.stubEnv("VITE_FIREBASE_API_KEY", "test-key");
+  vi.stubEnv("VITE_FIREBASE_PROJECT_ID", "test-project");
+});
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createReporter, MAX_SHOT } from "./send";

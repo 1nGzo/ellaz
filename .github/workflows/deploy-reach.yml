@@ -59,6 +59,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ vars.ENABLE_CLOUD_WORKFLOWS == 'true' }}
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

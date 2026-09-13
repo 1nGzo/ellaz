@@ -199,6 +199,7 @@ export function createReporter(options: ReporterOptions = {}): Reporter {
 
   /** An id token to write with, minting the identity on the very first report. */
   async function authorise(): Promise<{ uid: string; token: string; serverNow?: number } | null> {
+    if (!apiKey || !projectId) return null;
     const stored = readStored();
 
     if (stored) {

@@ -48,7 +48,7 @@ const ORGANIZATION = {
   url: `${ORIGIN}/`,
   logo: `${ORIGIN}/icon.svg`,
   description: SITE.en.tagline,
-  sameAs: ["https://github.com/Sigmafier/ellaz"],
+  sameAs: ["https://github.com/1nGzo/ellaz"],
 };
 
 /**

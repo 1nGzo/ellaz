@@ -20,8 +20,8 @@
 #      are new.
 set -euo pipefail
 
-PROJECT=ellaz-games
-SA=ellaz-bootstrap@${PROJECT}.iam.gserviceaccount.com
+PROJECT="${FIREBASE_PROJECT_ID:?Set FIREBASE_PROJECT_ID explicitly}"
+SA="${FIREBASE_SERVICE_ACCOUNT:?Set FIREBASE_SERVICE_ACCOUNT explicitly}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SPEC="$ROOT/firestore.indexes.json"
 API="https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/collectionGroups"

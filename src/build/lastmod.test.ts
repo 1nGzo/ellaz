@@ -33,7 +33,7 @@ describe("sitemap lastmod", () => {
     const xml = sitemapXml(new Map([[one.path, "2026-08-04T11:02:24+03:00"]]));
     const block = xml.match(/<url>[\s\S]*?<\/url>/)![0];
     expect(block).toContain("<lastmod>");
-    expect(block).toContain(one.path === "/" ? "<loc>https://ellaz.fun/</loc>" : one.path);
+    expect(block).toContain(one.path === "/" ? "<loc>http://localhost:5180/</loc>" : one.path);
   });
 
   it("still emits every indexable route when no dates are supplied", () => {
@@ -145,7 +145,7 @@ describe("indexnow url selection", () => {
     const xml = sitemapXml(new Map([["/", "2026-08-08T10:00:00+03:00"]]));
     const parsed = parseSitemap(xml);
     expect(parsed.length).toBe(ROUTES.filter((r) => r.indexable).length);
-    expect(parsed.find((p) => p.loc === "https://ellaz.fun/")?.lastmod).toBe(
+    expect(parsed.find((p) => p.loc === "http://localhost:5180/")?.lastmod).toBe(
       "2026-08-08T10:00:00+03:00",
     );
     // Every other row has no date, and must parse as empty rather than undefined.

@@ -115,7 +115,7 @@ describe("the route table", () => {
 
   it("keeps the canonical free of the base on every host", () => {
     for (const r of ROUTES) {
-      expect(canonicalUrl(r.path)).toBe(`https://ellaz.fun${r.path}`);
+      expect(canonicalUrl(r.path)).toBe(`http://localhost:5180${r.path}`);
       expect(canonicalUrl(r.path)).not.toContain("/ellaz/");
     }
   });
@@ -828,7 +828,7 @@ describe("robots, sitemap and llms", () => {
     for (const bot of ["OAI-SearchBot", "Claude-SearchBot", "PerplexityBot"]) {
       expect(txt).toContain(`User-agent: ${bot}`);
     }
-    expect(txt).toContain("Sitemap: https://ellaz.fun/sitemap.xml");
+    expect(txt).toContain("Sitemap: http://localhost:5180/sitemap.xml");
   });
 
   it("lists every indexable route in the sitemap, and nothing else", () => {
@@ -952,7 +952,7 @@ describe("the head injected into the application's own index.html", () => {
     );
     // Every page language advertised, and x-default pointing at the bare URL.
     for (const l of LOCALES) expect(tags).toContain(`hreflang="${l}"`);
-    expect(tags).toContain(`<link rel="alternate" hreflang="x-default" href="https://ellaz.fun/" />`);
+    expect(tags).toContain(`<link rel="alternate" hreflang="x-default" href="http://localhost:5180/" />`);
     const graph = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(tags)![1]);
     const list = graph["@graph"].find((n: { "@type": string }) => n["@type"] === "ItemList");
     expect(list.numberOfItems).toBe(GAMES.length);

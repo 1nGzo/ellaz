@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+vi.mock("../../site.config.json", () => ({ default: { origin: "http://localhost:5180", gaMeasurementId: "G-TEST123" } }));
 import { describe, expect, it } from "vitest";
 import { CONSENT_COPY, CONSENT_CSS, CONSENT_KEY, consentBar, consentBootScript } from "./consent";
 import { analyticsTag } from "./analytics";

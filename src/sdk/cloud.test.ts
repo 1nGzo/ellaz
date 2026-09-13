@@ -1,3 +1,8 @@
+import { beforeEach as configureCloud } from "vitest";
+configureCloud(() => {
+  vi.stubEnv("VITE_FIREBASE_API_KEY", "test-key");
+  vi.stubEnv("VITE_FIREBASE_PROJECT_ID", "test-project");
+});
 import { describe, it, expect, vi } from "vitest";
 import { createCloud, CLOUD_KEY, type CloudStore, type FetchLike } from "./cloud";
 import { emptyProfile, migrateProfile } from "./profile";

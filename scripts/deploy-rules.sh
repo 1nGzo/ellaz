@@ -23,8 +23,8 @@
 # Auth is by service-account IMPERSONATION — no key file is ever downloaded.
 set -euo pipefail
 
-PROJECT=ellaz-games
-SA=ellaz-bootstrap@${PROJECT}.iam.gserviceaccount.com
+PROJECT="${FIREBASE_PROJECT_ID:?Set FIREBASE_PROJECT_ID explicitly}"
+SA="${FIREBASE_SERVICE_ACCOUNT:?Set FIREBASE_SERVICE_ACCOUNT explicitly}"
 RULES_FILE="$(cd "$(dirname "$0")/.." && pwd)/firestore.rules"
 RELEASE="projects/${PROJECT}/releases/cloud.firestore"
 

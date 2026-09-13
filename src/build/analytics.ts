@@ -1,3 +1,4 @@
+import siteConfig from "../../site.config.json";
 /**
  * The Google Analytics tag, in ONE place, for the app shell and all 144 emitted
  * documents.
@@ -116,7 +117,7 @@
  */
 
 /** The property. One literal, so a second copy cannot drift. */
-export const GA_MEASUREMENT_ID = "G-E25QBB8420";
+export const GA_MEASUREMENT_ID = siteConfig.gaMeasurementId;
 
 /**
  * The tag as raw HTML for a `<head>`, or the empty string on a non-primary host.
@@ -126,7 +127,7 @@ export const GA_MEASUREMENT_ID = "G-E25QBB8420";
  * trusting either of them.
  */
 export function analyticsTag(base: string): string {
-  if (base !== "/") return "";
+  if (base !== "/" || !/^G-[A-Z0-9]+$/.test(GA_MEASUREMENT_ID)) return "";
   const id = GA_MEASUREMENT_ID;
   // Written compact on purpose: this ships in 145 documents, and the app shell
   // is a few hundred bytes from a hard payload ceiling. The reasoning lives in

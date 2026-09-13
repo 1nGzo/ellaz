@@ -33,7 +33,7 @@ const IS_MAIN = process.argv[1] && pathToFileURL(process.argv[1]).href === impor
 
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const SLUG = "Sigmafier/ellaz";
+const SLUG = process.env.GITHUB_REPOSITORY || "1nGzo/ellaz";
 const LIMIT = 350; // GitHub's own cap on the description field.
 
 /**

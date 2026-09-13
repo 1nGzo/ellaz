@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+vi.mock("../../site.config.json", () => ({ default: { origin: "http://localhost:5180", gaMeasurementId: "G-TEST123" } }));
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { GA_MEASUREMENT_ID, analyticsTag } from "./analytics";

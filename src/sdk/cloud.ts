@@ -341,6 +341,7 @@ export function createCloud(options: CloudOptions = {}): Cloud {
 
   /** A usable bearer token, refreshing or signing up as needed. */
   async function token(): Promise<string | null> {
+    if (!apiKey || !projectId) return null;
     if (idToken && Date.now() < idTokenExpiry - REFRESH_MARGIN_MS) return idToken;
 
     if (stored) {
@@ -411,6 +412,7 @@ export function createCloud(options: CloudOptions = {}): Cloud {
   // caller destructured the port (`const { push } = cloud`), which is exactly
   // how a React component would use it.
   function connect(): Promise<CloudIdentity | null> {
+    if (!apiKey || !projectId) return Promise.resolve(null);
     // Collapse concurrent callers onto one attempt, then release the latch so a
     // later call can retry. Caching the FAILURE would strand a player who
     // opened the app in a lift.

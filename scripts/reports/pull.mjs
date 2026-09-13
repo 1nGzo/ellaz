@@ -16,10 +16,11 @@
 // safe verb is the one you get by typing nothing.
 import { execFileSync } from "node:child_process";
 
-const PROJECT = "ellaz-games";
-const SA = `ellaz-bootstrap@${PROJECT}.iam.gserviceaccount.com`;
+const PROJECT = process.env.FIREBASE_PROJECT_ID;
+const SA = process.env.FIREBASE_SERVICE_ACCOUNT;
+if (!PROJECT || !SA) throw new Error("Set FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT explicitly (including --control).");
 const DOCS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
-const REPO = "Sigmafier/ellaz";
+const REPO = process.env.GITHUB_REPOSITORY || "1nGzo/ellaz";
 
 const argv = process.argv.slice(2);
 const FILE = argv.includes("--file");

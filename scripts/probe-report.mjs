@@ -19,8 +19,9 @@
 //
 // It leaves behind two anonymous users and up to two report documents, in a
 // collection nothing but an owner credential can read.
-const API_KEY = "AIzaSyDauvXsn6WL10fdtKRCo5l5PfLuRVXuWwA";
-const PROJECT = "ellaz-games";
+const API_KEY = process.env.VITE_FIREBASE_API_KEY;
+const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID;
+if (!API_KEY || !PROJECT) throw new Error("Set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID explicitly.");
 const DOCS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 
 let pass = 0;

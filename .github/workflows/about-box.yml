@@ -53,6 +53,7 @@ permissions:
 
 jobs:
   about:
+    if: ${{ vars.ENABLE_CLOUD_WORKFLOWS == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

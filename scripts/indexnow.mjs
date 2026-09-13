@@ -25,7 +25,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const DIST = process.env.DIST_DIR ?? "dist";
-const HOST = process.env.INDEXNOW_HOST ?? "ellaz.fun";
+const HOST = process.env.INDEXNOW_HOST;
 const ENDPOINT = process.env.INDEXNOW_ENDPOINT ?? "https://api.indexnow.org/indexnow";
 const SINCE_HOURS = Number(process.env.INDEXNOW_SINCE_HOURS ?? 48);
 
@@ -36,7 +36,7 @@ const SINCE_HOURS = Number(process.env.INDEXNOW_SINCE_HOURS ?? 48);
  * where the emitter can publish it. Rotating it means changing it here; the
  * build publishes the new file on the next deploy.
  */
-export const INDEXNOW_KEY = "92410e02f1e99deb9f7c751db9e59068";
+export const INDEXNOW_KEY = process.env.INDEXNOW_KEY;
 
 /** `[{ loc, lastmod }]` from a sitemap. `lastmod` is "" when absent. */
 export function parseSitemap(xml) {
@@ -91,6 +91,7 @@ async function main() {
     return;
   }
 
+  if (!HOST || !INDEXNOW_KEY) throw new Error("Set INDEXNOW_HOST and INDEXNOW_KEY explicitly");
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json; charset=utf-8" },

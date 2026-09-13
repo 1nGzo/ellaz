@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+vi.mock("../../site.config.json", () => ({ default: { origin: "http://localhost:5180", gaMeasurementId: "G-TEST123" } }));
 import { describe, it, expect } from "vitest";
 import { GAMES, metaFor } from "../portal/games";
 import { CANONICAL_LOCALE, PAGE_LOCALES } from "../i18n/locales";
@@ -56,10 +58,10 @@ describe("the snippet a stranger pastes", () => {
     // refactor that reorders an attribute or loses the `<p>` must fail here
     // by name rather than ship a different snippet to every game page.
     expect(embedSnippet(snake, "en")).toBe(
-      '<iframe src="https://ellaz.fun/embed/snake/?lang=en" width="100%" height="940" ' +
+      '<iframe src="http://localhost:5180/embed/snake/?lang=en" width="100%" height="940" ' +
         'style="border:0;border-radius:12px" allow="fullscreen" title="Snake - ellaz.fun"></iframe>\n' +
-        '<p>Play <a href="https://ellaz.fun/games/snake/">Snake</a> and more free games at ' +
-        '<a href="https://ellaz.fun/">ellaz.fun</a></p>',
+        '<p>Play <a href="http://localhost:5180/games/snake/">Snake</a> and more free games at ' +
+        '<a href="http://localhost:5180/">ellaz.fun</a></p>',
     );
     // 940, and the number is measured - the comment on EMBED_HEIGHT carries
     // both readings. What is pinned here is that it clears the tallest game
@@ -72,11 +74,11 @@ describe("the snippet a stranger pastes", () => {
   it("uses the game's id as the slug and the page's locale as the frame's language", () => {
     // The trap this repo names: `src/games/n2048/` has meta.id "2048".
     const he = embedSnippet(n2048, "he");
-    expect(he).toContain('src="https://ellaz.fun/embed/2048/?lang=he"');
+    expect(he).toContain('src="http://localhost:5180/embed/2048/?lang=he"');
     expect(he).not.toContain("n2048");
     // The credit line points at the HEBREW page, so the reader who pasted
     // from the Hebrew page sends their visitors to the page they read.
-    expect(he).toContain('<a href="https://ellaz.fun/he/games/2048/">');
+    expect(he).toContain('<a href="http://localhost:5180/he/games/2048/">');
     expect(he).toContain(gameName("2048", "he"));
   });
 
@@ -86,9 +88,9 @@ describe("the snippet a stranger pastes", () => {
       const [before, between, after] = SITE[locale].embed.credit;
       const name = gameName(meta.id, locale);
       // Two anchors, always: the game and the site. Neither is optional.
-      expect(credit.match(/<a href="https:\/\/ellaz\.fun\//g)?.length, `${meta.id} ${locale}`).toBe(2);
-      expect(credit).toContain(`<a href="https://ellaz.fun${gamePath(meta.id, locale)}">`);
-      expect(credit).toContain('<a href="https://ellaz.fun/">ellaz.fun</a>');
+      expect(credit.match(/<a href="http:\/\/localhost:5180\//g)?.length, `${meta.id} ${locale}`).toBe(2);
+      expect(credit).toContain(`<a href="http://localhost:5180${gamePath(meta.id, locale)}">`);
+      expect(credit).toContain('<a href="http://localhost:5180/">ellaz.fun</a>');
       expect(credit.startsWith(`<p>${before}`), `${meta.id} ${locale}`).toBe(true);
       expect(credit).toContain(`</a>${between}<a`);
       expect(credit.endsWith(`</a>${after}</p>`), `${meta.id} ${locale}`).toBe(true);
@@ -240,7 +242,7 @@ describe("the embed route table", () => {
     expect(embed.locales).toEqual([]);
     expect(embed.indexable).toBe(false);
     expect(embed.path).toBe("/embed/snake/");
-    expect(embed.canonical).toBe("https://ellaz.fun/games/snake/");
+    expect(embed.canonical).toBe("http://localhost:5180/games/snake/");
     const game = manifest.pages.find((p) => p.kind === "game" && p.id === "snake" && p.canonical.endsWith("/games/snake/"))!;
     expect(game.locales).toEqual([...PAGE_LOCALES]);
     expect(game.indexable).toBe(true);
@@ -288,7 +290,7 @@ describe("the embed document", () => {
   it("is noindex on both hosts, canonical to the game page, with no alternates", () => {
     for (const html of [primary, mirror]) {
       expect(html).toContain('<meta name="robots" content="noindex, follow" />');
-      expect(html).toContain('<link rel="canonical" href="https://ellaz.fun/games/snake/" />');
+      expect(html).toContain('<link rel="canonical" href="http://localhost:5180/games/snake/" />');
       expect(html).not.toContain('rel="alternate"');
     }
   });

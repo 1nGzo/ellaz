@@ -19,8 +19,9 @@
 // collection is the rule protecting a real player's code from being freed and
 // re-claimed. The PROBE- prefix is ten characters, so `normalizeBackupCode`
 // rejects it and it can never collide with a code a player is issued.
-const API_KEY = "AIzaSyDauvXsn6WL10fdtKRCo5l5PfLuRVXuWwA";
-const PROJECT = "ellaz-games";
+const API_KEY = process.env.VITE_FIREBASE_API_KEY;
+const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID;
+if (!API_KEY || !PROJECT) throw new Error("Set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID explicitly.");
 const DOCS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 
 let pass = 0;

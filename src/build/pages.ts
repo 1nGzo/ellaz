@@ -325,7 +325,7 @@ export function allEmittedFiles(
   // index the primary site from a copy that says noindex.
   if (isPrimaryHost(base)) {
     files.push({ fileName: "sitemap.xml", source: sitemapXml(lastmods) });
-    files.push({ fileName: `${INDEXNOW_KEY}.txt`, source: indexNowKeyFile() });
+    if (INDEXNOW_KEY) files.push({ fileName: `${INDEXNOW_KEY}.txt`, source: indexNowKeyFile() });
   }
 
   // The route table's own manifest, written on every build. "Which pages exist"
