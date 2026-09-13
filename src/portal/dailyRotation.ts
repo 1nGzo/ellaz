@@ -1,3 +1,4 @@
+import { allowsGame, currentPlayMode, type PlayMode } from "@sdk/playMode";
 // Which game is today's puzzle — the ONE place the rotation is derived.
 //
 // The rule is pure and lives in `@sdk/daily` (`dailyPick`); the ROSTER is a
@@ -39,8 +40,8 @@ export function todayKey(now: Date = new Date()): string {
  * This is the function `createContext` hands to `createDailyPort`, so it is
  * what decides whether a game's `complete()` counts toward the streak.
  */
-export function dailyGameId(dateKey: string): string | undefined {
-  return dailyPick(IDS, dateKey);
+export function dailyGameId(dateKey: string, mode: PlayMode = currentPlayMode()): string | undefined {
+  return dailyPick(IDS.filter((id) => allowsGame(id, mode)), dateKey);
 }
 
 /**

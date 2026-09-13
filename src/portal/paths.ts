@@ -1,3 +1,4 @@
+import { playHref } from "@sdk/playMode";
 import type { PageLocale } from "@i18n/locales";
 import { localePrefix } from "@i18n/locales";
 
@@ -41,7 +42,7 @@ function prefix(locale: PageLocale): string {
 }
 
 export function homeHref(locale: PageLocale): string {
-  return `${BASE}${prefix(locale)}`;
+  return playHref(`${BASE}${prefix(locale)}`);
 }
 
 /**
@@ -49,11 +50,11 @@ export function homeHref(locale: PageLocale): string {
  * `/games/2048/`, because its `meta.id` is "2048".
  */
 export function gameHref(id: string, locale: PageLocale): string {
-  return `${BASE}${prefix(locale)}games/${encodeURIComponent(id)}/`;
+  return playHref(`${BASE}${prefix(locale)}games/${encodeURIComponent(id)}/`);
 }
 
 export function worldHref(locale: PageLocale): string {
-  return `${BASE}${prefix(locale)}world/`;
+  return playHref(`${BASE}${prefix(locale)}world/`);
 }
 
 export function boardsHref(locale: PageLocale): string {

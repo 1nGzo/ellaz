@@ -1,3 +1,4 @@
+import { allowsGame, currentPlayMode } from "@sdk/playMode";
 import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { backArrow, makeT, pageLocaleFor, textFor } from "@i18n/index";
@@ -79,6 +80,8 @@ export function GameHost({
    */
   variant?: HostVariant;
 }) {
+  // A sitting keeps its mode even if another tab changes the saved preference.
+  const playMode = useRef(currentPlayMode()).current;
   const mountRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(false);
@@ -113,7 +116,11 @@ export function GameHost({
       return;
     }
 
-    const host = createHostControls(gameId, locale, el);
+    if (!allowsGame(gameId, playMode)) {
+      onExit();
+      return;
+    }
+    const host = createHostControls(gameId, locale, el, playMode);
     (host.context as unknown as { __setRequestExit: (f: () => void) => void }).__setRequestExit(
       onExit,
     );
@@ -211,6 +218,8 @@ export function GameHost({
   // build, where it resolves to the real site.
   useEffect(() => {
     if (variant === "app") return;
+    // Preschool has its own single replay action, without a competitive share overlay.
+    if (playMode === "preschool") return;
     let cancelled = false;
 
     entryFor(gameId).then((entry) => {
@@ -344,6 +353,7 @@ export function GameHost({
         ref={mountRef}
         data-runtime-locale={locale}
         data-content-locale={contentLocaleFor(locale)}
+        data-play-mode={playMode}
         // `ellaz-game-stage` is what makes a game unselectable, and it belongs
         // HERE rather than on each board: this is the one element every game
         // mounts inside, so the level toggle, the stat row and the footer are

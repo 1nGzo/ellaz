@@ -13,5 +13,5 @@ export const zhCN = {
   gameLoadFailed: "游戏加载失败", tryAgain: "重试", moves: "步数", pairs: "配对",
   installHint: "添加到主屏幕，离线也能玩", world: "我的世界", boards: "排行榜",
   coins: "金币", stars: "星星", dailyPuzzle: "每日挑战", dailyDone: "今日已完成",
-  reportHome: "反馈问题",
+  reportHome: "反馈问题", difficulty: "难度",
 } satisfies Partial<Record<StringKey, string>>;

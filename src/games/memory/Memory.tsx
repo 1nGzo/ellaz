@@ -1,3 +1,4 @@
+import { PreschoolMemory } from "./PreschoolMemory";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { textFor } from "@i18n/index";
 import type { GameContext, SessionSpec } from "@sdk/index";
@@ -95,6 +96,10 @@ const SESSION: SessionSpec<MemorySession> = {
 };
 
 export function Memory({ ctx }: { ctx: GameContext }) {
+  return ctx.playMode === "preschool" ? <PreschoolMemory ctx={ctx} /> : <StandardMemory ctx={ctx} />;
+}
+
+function StandardMemory({ ctx }: { ctx: GameContext }) {
   const restored = useMemo(() => ctx.session.load(SESSION), [ctx]);
   const [setIdx, setSetIdx] = useState(() => restored?.setIdx ?? 0);
   // The level is remembered by ID, then resolved to the index everything else

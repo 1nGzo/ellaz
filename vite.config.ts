@@ -639,7 +639,7 @@ export default defineConfig({
           // for the shell - so without this line a child downloads it before
           // choosing a game, for a screen they may never open. Same reasoning as
           // `Boards.tsx` above, and the shell has 473 B of headroom.
-          if (/\/src\/portal\/selectionDismiss\.ts$/.test(path)) return "page";
+          if (/\/src\/portal\/(selectionDismiss|preschoolPage)\.ts$/.test(path)) return "page";
           // `boardsView.ts` is the pure half of the boards screen and `Boards.tsx`
           // above is its ONLY importer, so the catch-all below was shipping it -
           // the ladder order, the record lookup, all of it - to every child on a

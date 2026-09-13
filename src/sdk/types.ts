@@ -222,6 +222,8 @@ export interface ScorePort {
 }
 
 export interface GameContext {
+  /** Absent on older hosts means standard. */
+  playMode?: import("./playMode").PlayMode;
   mount: HTMLElement;
   /** Compatibility language for existing authored records. */
   locale: Locale;

@@ -1,3 +1,4 @@
+import { allowsGame, currentPlayMode, type PlayMode } from "./playMode";
 import { shippedLocaleFor, contentLocaleFor, type AppLocale } from "@i18n/locales";
 import { makeT, DIR } from "@i18n/index";
 import type { GameContext } from "./types";
@@ -31,7 +32,8 @@ export interface HostControls {
   getExitHandler(): (() => void) | undefined;
 }
 
-export function createHostControls(gameId: string, runtimeLocale: AppLocale, mount: HTMLElement): HostControls {
+export function createHostControls(gameId: string, runtimeLocale: AppLocale, mount: HTMLElement, playMode: PlayMode = currentPlayMode()): HostControls {
+  if (!allowsGame(gameId, playMode)) throw new Error("Game unavailable in Preschool");
   const locale = shippedLocaleFor(runtimeLocale);
   const pauseCbs = new Set<() => void>();
   const resumeCbs = new Set<() => void>();
@@ -42,10 +44,11 @@ export function createHostControls(gameId: string, runtimeLocale: AppLocale, mou
   // One store, shared by the game's own saves and its personal bests, so both
   // live under the same `ellaz:<gameId>:` namespace and a single storage
   // failure degrades both the same way.
-  const storage = createSaveStore(gameId);
+  const storage = createSaveStore(playMode === "preschool" ? `${gameId}:preschool:${contentLocaleFor(runtimeLocale)}` : gameId);
 
   const context: GameContext = {
     mount,
+    playMode,
     locale,
     runtimeLocale,
     contentLocale: contentLocaleFor(runtimeLocale),
@@ -75,7 +78,7 @@ export function createHostControls(gameId: string, runtimeLocale: AppLocale, mou
       // score port itself never learns the network exists — it calls this, and
       // this is where the game id lives.
       onPersonalBest: ({ board, value, unit }) => {
-        void publishScore(gameId, board, value, unit);
+        if (playMode === "standard") void publishScore(gameId, board, value, unit);
       },
     }),
     // Where the player left off. Same store again, so a game's saves, its
@@ -94,7 +97,7 @@ export function createHostControls(gameId: string, runtimeLocale: AppLocale, mou
     // `dailyGameId` is what makes `complete()` a no-op for a game that is not
     // today's puzzle — the game reports it was finished either way and never
     // learns which branch it took.
-    daily: createDailyPort(gameId, { pick: dailyGameId }),
+    daily: createDailyPort(gameId, { pick: (date) => dailyGameId(date, playMode) }),
     lifecycle: {
       loadingStart: () => context.analytics.track("game_loading_start"),
       loadingFinished: () => context.analytics.track("game_loading_finished"),

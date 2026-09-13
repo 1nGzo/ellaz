@@ -1,3 +1,4 @@
+import { allowsGame, currentPlayMode, choosePlayMode } from "@sdk/playMode";
 import { useEffect, useReducer, useRef, useState, type CSSProperties } from "react";
 import type { AppLocale } from "@i18n/locales";
 import { makeT, textFor, pageLocaleFor } from "@i18n/index";
@@ -64,6 +65,7 @@ export function Home({
   onPickLocale: (next: AppLocale) => void;
 }) {
   const t = makeT(locale);
+  const mode = currentPlayMode();
   const [profile, setProfile] = useState<ProfileV1>(() => wallet.snapshot());
   const [filter, setFilter] = useState<Filter>(ALL);
 
@@ -97,7 +99,7 @@ export function Home({
   // `ROSTER_IDS` is the shell's own list and `roster-split.test.ts` asserts it
   // equals `GAMES.map(m => m.id)` element for element, so this order IS the
   // catalogue's order - the cards do not move when they arrive, they fill in.
-  const slots = ROSTER_IDS.filter((id) => filter === ALL || ROSTER_CATEGORY[id] === filter);
+  const slots = ROSTER_IDS.filter((id) => allowsGame(id, mode) && (filter === ALL || ROSTER_CATEGORY[id] === filter));
 
   // Only categories that actually have a game are offered. A chip that filters
   // to an empty grid is a dead end, and an empty grid gives a child no way back.
@@ -105,7 +107,7 @@ export function Home({
   // and `create` have ALL of their games below the fold, so deriving these from
   // what has ARRIVED would pop three chips into the nav row a beat after paint.
   const chips = CATEGORY_ORDER.filter((c) =>
-    ROSTER_IDS.some((id) => ROSTER_CATEGORY[id] === c.category),
+    ROSTER_IDS.some((id) => allowsGame(id, mode) && ROSTER_CATEGORY[id] === c.category),
   );
 
   // Filter FIRST, slice second. The wallet is below the portal in the module
@@ -126,7 +128,7 @@ export function Home({
   // `findEntry` will never resolve it.
   const recentIds = wallet
     .recentlyPlayed()
-    .filter((id) => ROSTER_IDS.includes(id))
+    .filter((id) => ROSTER_IDS.includes(id) && allowsGame(id, mode))
     .slice(0, RECENT_LIMIT);
 
   const juiceRef = useRef<HTMLDivElement>(null);
@@ -325,7 +327,7 @@ export function Home({
                 link, removed on mount, and that is now the ONLY inbound link a
                 crawler or a no-JavaScript visitor can follow. Removing it
                 orphans the screen. */}
-            <a
+            {mode === "standard" && <a
               href={boardsHref(pageLocaleFor(locale))}
               onClick={tap}
               aria-label={t("boards")}
@@ -335,7 +337,12 @@ export function Home({
               style={HEADER_PILL}
             >
               <Icon name="trophy" />
-            </a>
+            </a>}
+            <select aria-label={locale === "zh-CN" ? "游戏模式" : "Play mode"} style={{ ...HEADER_PILL, width: "auto" }}
+              value={mode} onChange={(e) => choosePlayMode(e.currentTarget.value === "preschool" ? "preschool" : "standard")}>
+              <option value="standard">{locale === "zh-CN" ? "标准模式" : "Standard"}</option>
+              <option value="preschool">{locale === "zh-CN" ? "幼儿模式 · 3–4 岁" : "Preschool · 3–4"}</option>
+            </select>
             <LanguagePicker locale={locale} onPick={onPickLocale} onTap={tap} />
             <ThemeToggle locale={locale} onTap={tap} />
           </div>
@@ -446,7 +453,7 @@ export function Home({
           })}
         </div>
 
-        <PrintablePacks locale={locale} onTap={tap} />
+        {mode === "standard" && <PrintablePacks locale={locale} onTap={tap} />}
 
         <p
           style={{

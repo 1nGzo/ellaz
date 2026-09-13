@@ -1,3 +1,5 @@
+import { allowsGame, currentPlayMode } from "@sdk/playMode";
+import { applyPlayPolicy } from "./preschoolPage";
 import { runtimeLocaleFor } from "@i18n/runtimeLocale";
 import { createRoot, type Root } from "react-dom/client";
 import type { AppLocale, PageLocale } from "@i18n/locales";
@@ -555,6 +557,11 @@ export function bootContentPage(ctx: PageContext): void {
   // than a literal: the answer to "we could not tell" is the same everywhere,
   // and it moved to English with the root.
   const locale: PageLocale = ctx.locale ?? DEFAULT_LOCALE;
+  applyPlayPolicy();
+  if (ctx.gameId && !allowsGame(ctx.gameId, currentPlayMode())) {
+    location.replace(homeHref(locale));
+    return;
+  }
   const frame = ctx.frame;
   if (!frame) return;
 
