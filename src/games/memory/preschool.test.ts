@@ -180,7 +180,7 @@ describe("Memory preschool mode", () => {
   it("renders Chinese picture and word cards, speaks Mandarin, and repeats the last word", () => {
     const { ctx, speech } = makeContext("preschool", "zh-CN");
     const { host, root } = mount(ctx);
-    const deck = preschoolDeck(1);
+    const deck = preschoolDeck(1, 1);
     const first = deck.cards[0];
     const firstButton = boardButtons(host)[0];
     const item = PRESCHOOL_CONTENT.find((c) => c.id === first.face)!;
@@ -206,7 +206,7 @@ describe("Memory preschool mode", () => {
       const level = PRESCHOOL_STAGES[stage - 1].levels;
       ctx.storage.set(PRESCHOOL_PROGRESS_KEY, { ...INITIAL_PROGRESS, stage, level });
       const mounted = mount(ctx);
-      const deck = preschoolDeck(stage);
+      const deck = preschoolDeck(stage, level);
       for (const face of new Set(deck.cards.map((c) => c.face))) {
         deck.cards.forEach((c, i) => { if (c.face === face) click(boardButtons(mounted.host)[i]); });
       }
@@ -226,13 +226,13 @@ describe("Memory preschool mode", () => {
   it("automatically advances and restores a settled partial board", () => {
     const { ctx } = makeContext("preschool", "zh-CN");
     const mounted = mount(ctx);
-    const deck = preschoolDeck(1);
+    const deck = preschoolDeck(1, 1);
     for (const face of new Set(deck.cards.map((c) => c.face))) {
       deck.cards.forEach((c, i) => { if (c.face === face) click(boardButtons(mounted.host)[i]); });
     }
     flushSync(() => vi.advanceTimersByTime(1600));
     expect(mounted.host.textContent).toContain("2 / 10");
-    const fresh = preschoolDeck(1);
+    const fresh = preschoolDeck(1, 2);
     fresh.cards.forEach((c, i) => { if (c.face === fresh.cards[0].face) click(boardButtons(mounted.host)[i]); });
     mounted.root.unmount();
     const snapshot = vi.mocked(ctx.session.save).mock.calls.at(-1)![1];
@@ -247,7 +247,7 @@ describe("Memory preschool mode", () => {
   it("awards a completed preschool deal once, while standard locales retain 6/8/10 pairs", () => {
     const preschool = makeContext("preschool", "zh-CN");
     const { host, root } = mount(preschool.ctx);
-    const deck = preschoolDeck(1);
+    const deck = preschoolDeck(1, 1);
     const faces = [...new Set(deck.cards.map((card) => card.face))];
     for (const face of faces) {
       const indices = deck.cards.flatMap((card, index) => (card.face === face ? [index] : []));
@@ -281,7 +281,7 @@ describe("Memory preschool mode", () => {
 
 describe("Preschool session validation", () => {
   it("accepts its own settled deck and refuses standard, unknown or partial pairs", () => {
-    const good = { stage: 1, level: 1, state: preschoolDeck(1) };
+    const good = { stage: 1, level: 1, state: preschoolDeck(1, 1) };
     expect(PRESCHOOL_SESSION.validate(good)).toBe(true);
     expect(PRESCHOOL_SESSION.validate({ level: "easy", state: good.state })).toBe(false);
     expect(PRESCHOOL_SESSION.validate({ stage: 2, level: 1, state: good.state })).toBe(false);
@@ -320,11 +320,74 @@ describe("Preschool stage progression", () => {
       if (stage > 1) expect(pool).toEqual(expect.arrayContaining(preschoolPool(stage - 1)));
       expect(pool.every((c) => /[\u4e00-\u9fff]/.test(c.word) && c.picture)).toBe(true);
       expect(new Set(pool.map((c) => c.word)).size).toBe(pool.length);
-      for (let deal = 0; deal < 100; deal++) {
-        const state = preschoolDeck(stage);
-        expect(PRESCHOOL_SESSION.validate({ stage, level: 1, state })).toBe(true);
+      for (let level = 1; level <= PRESCHOOL_STAGES[stage - 1].levels; level++) {
+        const state = preschoolDeck(stage, level);
+        expect(PRESCHOOL_SESSION.validate({ stage, level, state })).toBe(true);
         expect(new Set(state.cards.map((c) => c.face)).size).toBe(PRESCHOOL_STAGES[stage - 1].pairs);
       }
     }
+  });
+});
+
+describe("Round 4.1 vocabulary schedule", () => {
+  const faces = (stage: number, level: number) =>
+    [...new Set(preschoolDeck(stage, level).cards.map((c) => c.face))].sort();
+
+  it("introduces exactly 20/30/40/40 words with fair historical review and no adjacent overlap", () => {
+    const seen = new Map<string, number>();
+    let previous: string[] = [];
+    let turn = 0;
+    const added: number[] = [];
+    for (let stage = 1; stage <= 4; stage++) {
+      const before = seen.size;
+      const config = PRESCHOOL_STAGES[stage - 1];
+      for (let level = 1; level <= config.levels; level++) {
+        const current = faces(stage, level);
+        const fresh = current.filter((id) => !seen.has(id));
+        const review = current.filter((id) => seen.has(id));
+        expect(current).toHaveLength(config.pairs);
+        expect(fresh, `${stage}/${level} new`).toHaveLength(2);
+        expect(review, `${stage}/${level} review`).toHaveLength(config.pairs - 2);
+        expect(current.filter((id) => previous.includes(id))).toEqual([]);
+        // No newer word may be reviewed while an older waiting word is skipped.
+        const waiting = [...seen].filter(([id]) => !review.includes(id));
+        for (const id of review) {
+          for (const [, last] of waiting) expect(seen.get(id)!).toBeLessThanOrEqual(last);
+        }
+        current.forEach((id) => seen.set(id, turn));
+        previous = current;
+        turn++;
+      }
+      added.push(seen.size - before);
+      expect(seen.size).toBe(config.poolSize);
+    }
+    expect(added).toEqual([20, 30, 40, 40]);
+    expect(seen.size).toBe(130);
+    for (const key of ["id", "word", "picture"] as const) {
+      expect(new Set(PRESCHOOL_CONTENT.map((c) => c[key])).size).toBe(130);
+    }
+  });
+
+  it("keeps every level's combination across random sources and out-of-order requests", () => {
+    const random = vi.spyOn(Math, "random");
+    try {
+      for (let stage = 1; stage <= 4; stage++) {
+        for (let level = 1; level <= PRESCHOOL_STAGES[stage - 1].levels; level++) {
+          random.mockReturnValue(0.01);
+          const expected = faces(stage, level);
+          faces(4, 20);
+          random.mockReturnValue(0.99);
+          expect(faces(stage, level)).toEqual(expected);
+        }
+      }
+    } finally { random.mockRestore(); }
+  });
+
+  it("rejects a valid-sized board from another level or the old random pool", () => {
+    expect(PRESCHOOL_SESSION.version).toBe(3);
+    expect(PRESCHOOL_SESSION.validate({ stage: 2, level: 2, state: preschoolDeck(2, 1) })).toBe(false);
+    const old = preschoolDeck(1, 1);
+    old.cards.forEach((c) => { if (c.face === "cat") c.face = "dog"; });
+    expect(PRESCHOOL_SESSION.validate({ stage: 1, level: 1, state: old })).toBe(false);
   });
 });

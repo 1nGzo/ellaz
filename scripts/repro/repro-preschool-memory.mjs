@@ -53,6 +53,37 @@ assert.equal(spoken.at(-1).text,spoken.at(-2).text);
 // Use actual persisted decks to complete a board, then reload during celebration.
 const progressKey='ellaz:memory:preschool:zh-CN:stage-progress';
 const sessionKey='ellaz:memory:preschool:zh-CN:session';
+// Round 4.1: a settled partial board survives a real reload; removing only
+// the snapshot still regenerates the same level's vocabulary combination.
+await page.evaluate(({progressKey,sessionKey})=>{
+ localStorage.setItem(progressKey,JSON.stringify({version:1,stage:2,level:3,completed:false}));
+ localStorage.removeItem(sessionKey);
+},{progressKey,sessionKey});
+await page.reload();
+await cards.first().waitFor();
+await page.waitForTimeout(5200);
+const initial=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),sessionKey);
+assert.equal(initial.v,3);
+const pairFace=initial.s.state.cards[0].face;
+for(const [i,c] of initial.s.state.cards.entries()) if(c.face===pairFace) await cards.nth(i).click();
+await page.waitForTimeout(5200);
+const partial=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),sessionKey);
+assert.equal(partial.s.state.matchedPairs,1);
+await page.reload();
+await cards.first().waitFor();
+assert.equal(await cards.evaluateAll(xs=>xs.filter(x=>x.textContent!=='❓').length),2);
+await page.waitForTimeout(5200);
+const restored=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),sessionKey);
+assert.deepEqual(restored.s,partial.s);
+await page.evaluate(key=>localStorage.removeItem(key),sessionKey);
+await page.reload();
+await cards.first().waitFor();
+await page.waitForTimeout(5200);
+const regenerated=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),sessionKey);
+assert.equal(regenerated.s.stage,2);
+assert.equal(regenerated.s.level,3);
+assert.deepEqual(regenerated.s.state.cards.map(c=>c.face).sort(),initial.s.state.cards.map(c=>c.face).sort());
+console.log('PASS Round 4.1 partial-session reload and stable vocabulary without snapshot');
 for (const [stage, rows, cols, pairs, levels] of [[1,2,2,2,10],[2,2,3,3,15],[3,3,4,6,20],[4,4,4,8,20]]) {
  await page.evaluate(({progressKey,sessionKey,stage,levels})=>{
   localStorage.setItem(progressKey,JSON.stringify({version:1,stage,level:levels,completed:false}));

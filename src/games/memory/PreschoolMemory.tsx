@@ -18,7 +18,7 @@ export function PreschoolMemory({ ctx }: { ctx: GameContext }) {
   const [state, setState] = useState(() => {
     const saved = ctx.session.load(PRESCHOOL_SESSION);
     return saved?.stage === stage && saved.level === level && !isWon(saved.state)
-      ? saved.state : preschoolDeck(stage);
+      ? saved.state : preschoolDeck(stage, level);
   });
   const [celebration, setCelebration] = useState(progress.completed ? (chinese ? "🎉 全部完成！" : "🎉 ✓") : "");
   const live = useRef(state);
@@ -51,7 +51,7 @@ export function PreschoolMemory({ ctx }: { ctx: GameContext }) {
     const next = cursor.completed ? { ...cursor, level: 1, completed: false } : cursor;
     ctx.storage.set(PRESCHOOL_PROGRESS_KEY, next);
     setProgress(next);
-    const fresh = preschoolDeck(next.stage);
+    const fresh = preschoolDeck(next.stage, next.level);
     live.current = fresh;
     setState(fresh);
     setCelebration("");
@@ -95,7 +95,7 @@ export function PreschoolMemory({ ctx }: { ctx: GameContext }) {
         timer.current = setTimeout(() => {
           setProgress(nextProgress);
           if (!nextProgress.completed) {
-            const fresh = preschoolDeck(nextProgress.stage);
+            const fresh = preschoolDeck(nextProgress.stage, nextProgress.level);
             live.current = fresh;
             setState(fresh);
             paid.current = false;
